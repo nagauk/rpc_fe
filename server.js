@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const path = require('path');
 
+
 const pages = __dirname+'/app/pages/';
 
 // create express app
@@ -21,15 +22,36 @@ app.get('/', (req, res) => {
 });
 
 app.get('/home', function(req, res) {
+ 
     res.sendFile(path.join(pages + 'index.html'));
 });
 
 app.get('/selRps', function(req, res) {
+    
     res.sendFile(path.join(pages + 'selectrps.html'));
 });
 
 app.get('/result', function(req, res) {
-    res.sendFile(path.join(pages + 'result.html'));
+    let playerType = '';
+    let moveType ='';
+    let status = '';
+    http.get('http://localhost:8082/play?moveType=PAPER&playerType=COMPUTER',(resp) => {
+
+          let data = '';
+          // parsed response body as js object
+          resp.on('data', (chunk) => {
+            data += chunk;
+          });
+        
+          // The whole response has been received. Print out the result.
+          resp.on('end', () => {
+            console.log(JSON.parse(data));
+            playerType = data.playerType;
+            moveType = data.moveType;
+            status = data.status;
+          });
+    });
+    res.sendFile(path.join(pages + 'result.html'),playerType,moveType,status);
 });
 
 require('./app/routes/rps.routes.js')(app);
